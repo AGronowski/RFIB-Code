@@ -1,0 +1,139 @@
+import torch
+from torch import nn
+from torchvision import models
+
+# Baseline model
+class Baseline(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.resnet = models.resnet50(pretrained=True)  # Pretrained on resnet, 50 layers
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(512 * 4, 1)
+        self.fc1 = nn.Linear(512 * 4, 256)
+        self.fc2 = nn.Linear(512 * 4, 256)
+
+        del self.resnet.fc
+        del self.resnet.avgpool
+
+        self.lin_1 = torch.nn.Sequential(
+            torch.nn.Linear(256,100),
+            torch.nn.BatchNorm1d(100),
+            torch.nn.ReLU6(),
+        )
+        self.lin_2 = torch.nn.Sequential(
+            torch.nn.Linear(100, 1),
+            torch.nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        x = self.resnet.conv1(x)
+        x = self.resnet.bn1(x)
+        x = self.resnet.relu(x)
+        x = self.resnet.maxpool(x)
+
+        x = self.resnet.layer1(x)
+        x = self.resnet.layer2(x)
+        x = self.resnet.layer3(x)
+        x = self.resnet.layer4(x)
+
+        x = self.avgpool(x)
+        rep = torch.flatten(x,1)
+        x = self.fc1(rep)
+
+        x = self.lin_1(x)
+        x = self.lin_2(x)
+        return x
+
+
+# Encoder for $Q_{Z|X}
+class ResnetEncoder(nn.Module):
+    def __init__(self,latent_dim):
+        super().__init__()
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        self.resnet = models.resnet50(pretrained=True)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(512 * 4, 1)
+        self.fc1 = nn.Linear(512 * 4, latent_dim)
+        self.fc2 = nn.Linear(512 * 4, latent_dim)
+
+        del self.resnet.fc
+        del self.resnet.avgpool
+
+    # Reparameterization trick
+    def reparametrize(self,mu,logvar):
+        std = torch.exp(0.5*logvar)
+        eps = torch.rand_like(std,device=self.device)
+        return mu + std*eps
+
+    def forward(self, x):
+        x = self.resnet.conv1(x)
+        x = self.resnet.bn1(x)
+        x = self.resnet.relu(x)
+        x = self.resnet.maxpool(x)
+
+        x = self.resnet.layer1(x)
+        x = self.resnet.layer2(x)
+        x = self.resnet.layer3(x)
+        x = self.resnet.layer4(x)
+
+        x = self.avgpool(x)
+        rep = torch.flatten(x,1)
+        mu = self.fc1(rep)
+        logvar = self.fc2(rep)
+
+        z = self.reparametrize(mu,logvar)
+        return z, mu, logvar
+
+
+# Decoder for Q_{Y|Z}
+class Decoder(nn.Module):
+    def __init__(self,latent_dim,output_dim):
+        super().__init__()
+
+        self.lin1 = torch.nn.Sequential(
+            torch.nn.Linear(latent_dim, output_dim),
+        )
+
+    def forward(self,z):
+        z = self.lin1(z)
+        return z
+
+
+# Decoder for Q_{Y|S,Z}
+class FairDecoder(nn.Module):
+    def __init__(self,latent_dim,output_dim):
+        super().__init__()
+
+        self.lin1 = torch.nn.Sequential(
+            torch.nn.Linear(latent_dim+1, output_dim),
+        )
+
+    def forward(self, z, s):
+        s = s.view(-1, 1)
+        z = self.lin1(torch.cat((z, s), 1))
+        return z
+
+
+# Main RFIB model
+class RFIB(nn.Module):
+    def __init__(self,latent_dim,output_dim=1):
+        super().__init__()
+
+        self.encoder = ResnetEncoder(latent_dim)
+        self.decoder = Decoder(latent_dim,output_dim)
+        self.fair_decoder = FairDecoder(latent_dim,output_dim)
+
+    def forward(self, x, a):
+        z, mu, logvar = self.encoder(x)
+        yhat = self.decoder(z)
+        yhat_fair = self.fair_decoder(z, a)
+
+        return yhat, yhat_fair, mu, logvar
+
+    def getz(self,x):
+        return self.encoder(x)
+
+
+
+
