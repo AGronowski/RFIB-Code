@@ -13,3 +13,9 @@ CelebA dataset can be found at: http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
 
 FairFace dataset can be found at: https://github.com/joojs/fairface
 
+To install requirements:
+```
+pip install -r requirements.txt
+```
+
+
