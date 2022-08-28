@@ -3,18 +3,10 @@ import numpy as np
 
 def get_accuracy(predictions,y):
     accuracy = np.sum(predictions == y) / len(y)
-<<<<<<< HEAD
-=======
-
->>>>>>> af517cb84769923823d05b0472dfa76d89aafadd
     return accuracy
 
 
 def get_min_accuracy(predictions, y, s):
-<<<<<<< HEAD
-=======
-
->>>>>>> af517cb84769923823d05b0472dfa76d89aafadd
     predictions_0 = predictions[s == 0]
     y_0 = y[s == 0]
     accuracy_0 = np.sum(predictions_0 == y_0) / (len(y_0) + 1e-10)
@@ -34,10 +26,6 @@ def get_discrimination(predictions, s):
     a0 = np.sum(s == 0)
 
     discrimination = np.abs(pos_predictions_a1 / (a1 + 1e-10) - pos_predictions_a0 / (a0 + 1e-10))
-<<<<<<< HEAD
-=======
-
->>>>>>> af517cb84769923823d05b0472dfa76d89aafadd
     return discrimination
 
 
