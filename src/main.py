@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-import time
 import network
 import dataset
 import cost_functions
@@ -10,7 +9,6 @@ from tqdm import tqdm
 import umap_functions
 from torch.utils.data import SubsetRandomSampler, random_split
 
-start_time = time.time()
 seed = 2026
 torch.manual_seed(seed)
 np.random.seed(seed)
@@ -200,7 +198,6 @@ def main():
                 name = f'../results/{datasets[dataset_type]}_{methods[method]}_b1_{beta1}_b2_{beta2}_{privateSensitiveEqual}_latdim_{latent_dim}.pt '
                 torch.save(model.state_dict(), name)
 
-            print("--- %s seconds ---" % (time.time() - start_time))
             print(f"dataset = {datasets[dataset_type]}")
             print(f"method = {methods[method]}")
             print(f"alpha = {alpha}")
