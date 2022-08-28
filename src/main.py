@@ -130,7 +130,7 @@ def main():
 
                     if method == 3:  # Baseline
                         yhat = model(x)
-                    else:  # IB, CFB, RFIB, or RPFIB
+                    else:  # IB, CFB, RFIB
                         yhat, yhat_fair, mu, logvar = model(x, s)
 
                     # IB loss
@@ -167,7 +167,7 @@ def main():
                 resultY = evaluations.evaluate(model, test_dataloader, method, debugging, device, alpha, beta1, beta2,
                                                predictions=True)
 
-            # Evaluate IB, CFB, RFIB, or RFPIB using logistic regression
+            # Evaluate IB, CFB, or RFIB using logistic regression
             if not umap and method != 3:  # not baseline
                 result_log = evaluations.evaluate_logistic_regression(model, train_set, test_set, device, debugging,
                                                                       numworkers)
@@ -197,7 +197,7 @@ def main():
                         beta1_history)
 
                 # Save Model
-                name = f'../results/{datasets[dataset_type]}_{methods[method]}_b1_{beta1}_b2_{beta2}_b3_{beta3}_{privateSensitiveEqual}_latdim_{latent_dim}.pt '
+                name = f'../results/{datasets[dataset_type]}_{methods[method]}_b1_{beta1}_b2_{beta2}_{privateSensitiveEqual}_latdim_{latent_dim}.pt '
                 torch.save(model.state_dict(), name)
 
             print("--- %s seconds ---" % (time.time() - start_time))
