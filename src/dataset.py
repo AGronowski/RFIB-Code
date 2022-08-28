@@ -5,14 +5,9 @@ from skimage import io
 import numpy as np
 import pandas as pd
 import os
-import main
 
 torch.manual_seed(2022)
 np.random.seed(2022)
-
-privateSenstiveEqual = main.privateSensitiveEqual
-swapVariables = main.swapVariables
-
 
 class CelebaDataset(torch.utils.data.Dataset):
     def __init__(self, csv_file, root_dir, transform=None, gender=False):
@@ -37,20 +32,10 @@ class CelebaDataset(torch.utils.data.Dataset):
 
         if self.gender:  # S = Gender
             sensitive = self.frame.iloc[index, 3]  # Sensitive is gender
-            private = self.frame.iloc[index, 4]  # Private is skin tone
         else:  # S = ITA (Skin Tone)
             sensitive = self.frame.iloc[index, 4]  # Sensitive is skin tone
-            private = self.frame.iloc[index, 3]  # Private is gender
 
-        if privateSenstiveEqual:
-            private = sensitive
-
-        if swapVariables:
-            temp = sensitive
-            sensitive = private
-            private = temp
-
-        return image, target, sensitive, private
+        return image, target, sensitive
 
 
 class EyepacsDataset(torch.utils.data.Dataset):
@@ -74,7 +59,7 @@ class EyepacsDataset(torch.utils.data.Dataset):
         target = self.frame.iloc[index, 2]  # Target is Diabetic Retinopathy Status
         sensitive = self.frame.iloc[index, 4]  # Sensitive is ITA (Skin Tone)
 
-        return image, target, sensitive, sensitive  # Private and Sensitive are Equal
+        return image, target, sensitive
 
 
 class FairfaceDataset(torch.utils.data.Dataset):
@@ -99,7 +84,7 @@ class FairfaceDataset(torch.utils.data.Dataset):
         target = self.frame.iloc[index, 6]  # Y = Gender
         sensitive = self.frame.iloc[index, 5]  # S = ITA (Skin Tone)
 
-        return image, target, sensitive, sensitive  # Private and Sensitive are Equal
+        return image, target, sensitive
 
 
 def get_fairface():

@@ -47,27 +47,3 @@ def get_RFIB_loss(yhat, yhat_fair, y, mu, logvar, alpha, beta1, beta2):
     loss = divergence + beta1 * IB_cross_entropy + beta2 * CFB_cross_entropy
 
     return loss
-
-
-# RFPIB loss
-def get_RFPIB_loss(yhat, yhat_fair, y, mu, logvar, alpha, beta1, beta2, beta3, reconstruction, x):
-    if alpha == 0:
-        divergence = 0
-    elif alpha == 1:  # KL Divergence
-        divergence = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    else:
-        divergence = renyi_divergence(mu, logvar, alpha)
-
-    IB_cross_entropy = torch.nn.functional.binary_cross_entropy_with_logits(yhat.view(-1), y,
-                                                                            reduction='sum')
-    CFB_cross_entropy = torch.nn.functional.binary_cross_entropy_with_logits(yhat_fair.view(-1), y,
-                                                                             reduction='sum')
-    reconstruction_cross_entropy = torch.nn.functional.binary_cross_entropy(reconstruction, x,
-                                                                            reduction='sum')
-    if divergence != 0:
-        if divergence.isnan():
-            divergence = 0
-
-    loss = 2 * divergence + beta1 * IB_cross_entropy + beta2 * CFB_cross_entropy + beta3 * reconstruction_cross_entropy
-
-    return loss, divergence, IB_cross_entropy, CFB_cross_entropy, reconstruction_cross_entropy

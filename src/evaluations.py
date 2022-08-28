@@ -19,7 +19,7 @@ def evaluate_logistic_regression(model, trainset, testset, device, debugging, nu
         y_list = []
         z_list = []
 
-        for x, y, s, p in tqdm(traindataloader, disable=not (debugging)):
+        for x, y, s in tqdm(traindataloader, disable=not (debugging)):
             x = x.to(device).float()
             y = y.to(device).float()
 
@@ -48,7 +48,7 @@ def evaluate_logistic_regression(model, trainset, testset, device, debugging, nu
         z_list = []
         s_list = []
 
-        for x, y, s, p in tqdm(testdataloader, disable=not (debugging)):
+        for x, y, s in tqdm(testdataloader, disable=not (debugging)):
             x = x.to(device).float()
             y = y.to(device).float()
             s = s.to(device).float()
@@ -89,32 +89,29 @@ def evaluate_logistic_regression(model, trainset, testset, device, debugging, nu
 
 
 # Get Loss
-def evaluate(model, dataloader, method, debugging, device, alpha, beta1, beta2, beta3, predictions=True):
+def evaluate(model, dataloader, method, debugging, device, alpha, beta1, beta2, predictions=True):
     model.eval()
     testloss = 0
 
     y_list = []
-    a_list = []
-    p_list = []
+    s_list = []
     yhat_list = []
     yhat_fair_list = []
 
     with torch.no_grad():
-        for x, y, s, p in tqdm(dataloader, disable=not debugging):
+        for x, y, s in tqdm(dataloader, disable=not debugging):
             x = x.to(device).float()
             y = y.to(device).float()
             s = s.to(device).float()
-            p = p.to(device).float()
 
             if method == 3:  # baseline
                 yhat = model(x)
             else:
-                yhat, yhat_fair, mu, logvar, reconstruction = model(x, s, p)
+                yhat, yhat_fair, mu, logvar = model(x, s)
                 yhat_fair_list.append(yhat_fair)
 
             y_list.append(y)
-            a_list.append(s)
-            p_list.append(p)
+            s_list.append(s)
             yhat_list.append(yhat)
 
         # Get loss for validation
@@ -133,18 +130,12 @@ def evaluate(model, dataloader, method, debugging, device, alpha, beta1, beta2, 
             elif method == 3:
                 loss = torch.nn.functional.binary_cross_entropy(yhat.view(-1), y,
                                                                 reduction='sum')
-            # RFPIB loss
-            elif method == 4:
-                loss, divergence_loss, IB_loss, skoglund_loss, reconstruction_loss = cost_functions.get_RFPIB_loss(
-                    yhat, yhat_fair, y, mu, logvar, alpha, beta1, beta2, beta3,
-                    reconstruction, x)
 
             testloss += loss.item()
 
         if predictions:
-
             Y_test = torch.cat(y_list, dim=0)
-            A_test = torch.cat(a_list, dim=0)
+            A_test = torch.cat(s_list, dim=0)
             Yhat_test = torch.cat(yhat_list, dim=0)
 
             y = Y_test.cpu().detach().numpy()
