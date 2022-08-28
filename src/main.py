@@ -17,12 +17,10 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 if device == 'cpu':
     numworkers = 0
-    debugging = True  # Use smaller training partition for debugging purposes when running on personal computer
-    progressbar = True
 else:
     numworkers = 32
-    debugging = False  # Use full partition when using the GPU
-    progressbar = False
+debugging = False  # Use full partition when using the GPU
+progressbar = False
 
 
 def main():
