@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+<<<<<<< HEAD
       <module fileurl="file://$PROJECT_DIR$/.idea/RFPIB Code.iml" filepath="$PROJECT_DIR$/.idea/RFPIB Code.iml" />
+=======
+      <module fileurl="file://$PROJECT_DIR$/.idea/RFIB Code.iml" filepath="$PROJECT_DIR$/.idea/RFIB Code.iml" />
+>>>>>>> af517cb84769923823d05b0472dfa76d89aafadd
     </modules>
   </component>
 </project>
